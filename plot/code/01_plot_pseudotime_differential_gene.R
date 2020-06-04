@@ -1,13 +1,12 @@
 library(Matrix)
 source('/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01_function.R')
+# pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC3_NEU1.rds')
 pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC3_NEU1.rds')
-# pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC1.rds')
 rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/MDSC_MAC3_NEU1/'
-dir.create(rdir, showWarnings = F, recursive = T)
 setwd(rdir)
 
 cnt <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M/count.rds')
-meta <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M/meta.rds')
+# meta <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M/meta.rds')
 cnt <- cnt[, pseudotime]
 cellanno <- data.frame(cell = colnames(cnt), sample = sapply(colnames(cnt), function(i) sub('_.*','',sub('.*-','',i))), stringsAsFactors = FALSE)
 mdsc <- read.csv('/home-4/whou10@jhu.edu/data2/whou10/GBM/meta/mdsc_proportions.csv', header = T)
@@ -21,12 +20,25 @@ cnt <- as.matrix(cnt)
 rc <- colSums(cnt)
 rc <- rc/median(rc)
 cnt <- t(log2(t(cnt)/rc + 1))
-cnt <- cnt[rowSums(cnt>0.1)>0.01,] ## filter genes
+cnt <- cnt[rowMeans(cnt>1)>0.2,] ## filter genes
+final <- readRDS('final.rds') 
+res <- final[['res']][rownames(cnt),]
+res <- res[order(res[,2]), ]
 
-# ### subset a small test set
-# set.seed(12345)
-# id1 = sample(rownames(cnt),5)
-# cnt <- cnt[id1, ]
-### algo
-final <- DiffPermute(GeneByCellExpr = cnt, pseudotime = pseudotime, design=design, cellanno = cellanno, maxCell=1000, parallel = TRUE)
-saveRDS(final, 'final.rds')  
+######### plot
+plotGene(Gene = rownames(res)[10:18],
+         Mat = cnt,
+         Order = data.frame(Cell = pseudotime, Pseudotime = seq(1, length(pseudotime))),
+         Design = design,
+         Cellanno = cellanno,
+         Stat = res,
+         Alpha = 0.2,
+         Size = 0.1, FreeScale = T)
+plotGene(Gene = 'SEPT6',
+         Mat = cnt,
+         Order = data.frame(Cell = pseudotime, Pseudotime = seq(1, length(pseudotime))),
+         Design = design,
+         Cellanno = cellanno,
+         Stat = res,
+         Alpha = 0.2,
+         Size = 0.1, FreeScale = F, BySample = TRUE, PlotPoints = TRUE)

@@ -19,38 +19,15 @@ cellanno <- cellanno[cellanno[,2] %in% rownames(design),]
 cnt <- cnt[, cellanno[,1]]
 pseudotime = pseudotime[pseudotime %in% cellanno[,1]]
 cnt <- as.matrix(cnt)
-### 
-design = cbind(1,design)
-library(gtools)
-# per <- permutations(nrow(design),nrow(design))
-per <- t(sapply(1:100, function(i){
-  set.seed(i)
-  sample(rownames(design))
-}))
+rc <- colSums(cnt)
+rc <- rc/median(rc)
+cnt <- t(log2(t(cnt)/rc + 1))
+cnt <- cnt[rowSums(cnt>0.1)>0.01,] ## filter genes
 
-id <- which(!duplicated(apply(per,1,function(i) paste0(as.vector(design[i,]),collapse = '_'))))
-per <- per[id,]
-oriid <- which(apply(per,1,function(i) paste0(as.vector(design[i,]),collapse = '_'))==paste0(as.vector(design),collapse = '_'))
-library(parallel)
-# perll <- mclapply(1:2,function(i) {
-perll <- mclapply(1:nrow(per),function(i) {
-  perdesign <- design[per[i,],,drop=F]
-  row.names(perdesign) <- row.names(design)
-  diffpt(expr=cnt,design=perdesign,pseudotime=pseudotime,num.knot = 3,cellanno = cellanno, verbose = T)$logL
-}, mc.cores = 4)
-perll <- do.call(cbind,perll)
-pval <- sapply(1:nrow(perll), function(i) pnorm(perll[i,oriid],mean(perll[i,-oriid]),sd(perll[i,-oriid]),lower.tail = F))
-fdr <- p.adjust(pval,method='fdr')
-names(fdr) <- row.names(perll)
-
-saveRDS(fdr, 'fdr.rds')  
-res <- data.frame(P.Value = pval, adj.P.Val = fdr, stringsAsFactors = F)
-rownames(res) <- names(fdr)
-res <- res[order(res[,2]),]
-sensfdr <- SensFdr(Order = rownames(res), TruePositive = selgene, statistics=res)
-final <- list()
-final[['res']] <- res
-final[['sensfdr']] <- c(method, AreaUnderSensFdr(sensfdr))
-final[['perll']] <- perll
+# ### subset a small test set
+# set.seed(12345)
+# id1 = sample(rownames(cnt),5)
+# cnt <- cnt[id1, ]
+### algo
+final <- DiffPermute(GeneByCellExpr = cnt, pseudotime = pseudotime, design=design, cellanno = cellanno, maxCell=1000, parallel = TRUE)
 saveRDS(final, 'final.rds')  
-

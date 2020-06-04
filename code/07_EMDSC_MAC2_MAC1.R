@@ -1,8 +1,9 @@
 library(Matrix)
 source('/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01_function.R')
 # pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC3_NEU1.rds')
-pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC1.rds')
-rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/MDSC_MAC1/'
+# pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC1.rds')
+pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MAC2_MAC1.rds')
+rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/E_MDSC/MAC2_MAC1/'
 dir.create(rdir, showWarnings = F, recursive = T)
 setwd(rdir)
 
@@ -11,7 +12,7 @@ meta <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M/meta.rds
 cnt <- cnt[, pseudotime]
 cellanno <- data.frame(cell = colnames(cnt), sample = sapply(colnames(cnt), function(i) sub('_.*','',sub('.*-','',i))), stringsAsFactors = FALSE)
 mdsc <- read.csv('/home-4/whou10@jhu.edu/data2/whou10/GBM/meta/mdsc_proportions.csv', header = T)
-design <- data.frame(MdscProp = mdsc[,8])
+design <- data.frame(MdscProp = mdsc[,3])  ## 3 is E-MDSC, 8 is M-MDSC
 rownames(design) <- as.character(mdsc[,2])
     
 cellanno <- cellanno[cellanno[,2] %in% rownames(design),]
@@ -28,5 +29,5 @@ cnt <- cnt[rowSums(cnt>0.1)>0.01,] ## filter genes
 # id1 = sample(rownames(cnt),5)
 # cnt <- cnt[id1, ]
 ### algo
-final <- DiffPermute(GeneByCellExpr = cnt, pseudotime = pseudotime, design=design, cellanno = cellanno, maxCell=1000, parallel = TRUE)
+final <- DiffPermute(GeneByCellExpr = cnt, pseudotime = pseudotime, design=design, cellanno = cellanno, maxCell=1000, parallel = TRUE, maxCore = 8)
 saveRDS(final, 'final.rds')  
