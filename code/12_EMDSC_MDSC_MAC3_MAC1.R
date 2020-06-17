@@ -1,8 +1,7 @@
 library(Matrix)
 source('/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01_function.R')
-# pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC3_NEU1.rds')
-pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC1.rds')
-rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/E_MDSC/MDSC_MAC1/'
+pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC3_MAC1.rds')
+rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/E_MDSC/MDSC_MAC3_MAC1/'
 dir.create(rdir, showWarnings = F, recursive = T)
 setwd(rdir)
 

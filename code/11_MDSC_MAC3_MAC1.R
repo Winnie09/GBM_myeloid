@@ -1,8 +1,7 @@
 library(Matrix)
 source('/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01_function.R')
-# pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC3_NEU1.rds')
-pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC1.rds')
-rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/E_MDSC/MDSC_MAC1/'
+pseudotime <- readRDS('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/MDSC_MAC3_MAC1.rds')
+rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/M_MDSC/MDSC_MAC3_MAC1/'
 dir.create(rdir, showWarnings = F, recursive = T)
 setwd(rdir)
 
@@ -16,7 +15,7 @@ meta <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M/meta.rds
 cnt <- cnt[, pseudotime]
 cellanno <- data.frame(cell = colnames(cnt), sample = sapply(colnames(cnt), function(i) sub('_.*','',sub('.*-','',i))), stringsAsFactors = FALSE)
 mdsc <- read.csv('/home-4/whou10@jhu.edu/data2/whou10/GBM/meta/mdsc_proportions.csv', header = T)
-design <- data.frame(MdscProp = mdsc[,3])  ## 3 is E-MDSC, 8 is M-MDSC
+design <- data.frame(MdscProp = mdsc[,8])  ## 3 is E-MDSC, 8 is M-MDSC
 rownames(design) <- as.character(mdsc[,2])
     
 cellanno <- cellanno[cellanno[,2] %in% rownames(design),]
