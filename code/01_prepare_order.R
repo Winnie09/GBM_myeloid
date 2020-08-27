@@ -1,95 +1,88 @@
-### GBM myeloid
-dm = read.csv('/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/chris/myeloidsubdiffusion.csv')
-rn = as.character(dm[,1])
-dm = cbind(DC1 = dm[,2], DC2 = dm[,3])
-rownames(dm) = rn
-meta <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M/meta.rds')
-active.ident <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M/active.ident.rds')
-meta = cbind(meta, active.ident = active.ident[rownames(meta)])
-meta <- meta[meta$Tumor.Grade == 'IV' & meta$Treatment == 'Untreated', ]
-selectcell <- rownames(meta[meta$active.ident %in% c('MDSC', 'MAC1', 'MAC2', 'MAC3', 'NEU1', 'MAC4'), ])
-dm = dm[selectcell, ]
-library(ggplot2)
-pd = data.frame(x = dm[,1], y = dm[,2], ct = active.ident[selectcell])
-ggplot() + geom_point(data = pd, aes(x = x, y = y, col = ct), size = 0.1, alpha = 0.1) + theme_classic() +guides(color=guide_legend(override.aes = list(size=5, alpha = 1)))
-set.seed(10)
-clu <- kmeans(dm,6)$cluster
-pd = data.frame(x = dm[,1], y = dm[,2], ct = factor(clu))
-ggplot() + geom_point(data = pd, aes(x = x, y = y, col = ct), size = 0.5) + theme_classic() +
-  guides(color=guide_legend(override.aes = list(size=5, alpha = 1)))
+library(Seurat)
+source('/home-4/whou10@jhu.edu/scratch/Wenpin/resource/myfunc/01_function.R')
+m_seu = readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/seuratObject/M_subser.RDS')
+expr <- m_seu@assays$RNA@counts
+rc <- colSums(expr)
+rc <- rc/median(rc)
+expr <- t(t(expr)/rc)
+expr@x <- log2(expr@x + 1)
+saveRDS(expr, '/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M_log2cpm.rds')
 
+phate <- as.matrix(m_seu@reductions$phate@cell.embeddings)
+umap <- as.matrix(m_seu@reductions$umap@cell.embeddings)
+pca <- as.matrix(m_seu@reductions$pca@cell.embeddings)
+meta <- m_seu@meta.data
+active.ident <- as.character(m_seu@active.ident)
+library(ggplot2)
+library(scattermore)
+ggplot(data = data.frame(x = phate[,1], y = phate[,2], celltype = active.ident), 
+       aes(x = x, y = y, color = active.ident)) + 
+  geom_scattermore()
+
+meta = cbind(meta, active.ident = active.ident)
+meta <- meta[meta$Tumor.Grade == 'IV' & meta$Treatment == 'Untreated', ]
+selectcell1 <- rownames(meta[meta$active.ident %in% c('E-MDSC', 'M-MDSC'), ])
+selectcell2 <- rownames(meta[meta$active.ident %in% c('E-MDSC', 'MAC1'), ])
+
+
+phate.tmp = phate[selectcell1,]
+meta.tmp = meta[selectcell1,]
 library(TSCAN)
 library(RColorBrewer)
-clu = as.character(active.ident[rownames(dm)])
+clu = as.character(meta.tmp$active.ident)
 clu = as.numeric(as.factor(clu))
-names(clu) = rownames(dm)
-
-
-id = which(clu %in% c(5,3,6))
-newclu <- clu[id]
-n <- names(newclu)
-newclu <- as.numeric(as.factor(newclu))
-names(newclu) <- n
-mc <- exprmclust(t(dm[id, ]),cluster=newclu,reduce=F)
-ggplot() + geom_point(data = pd, aes(x = x, y = y, col = clu), size = 0.01) + theme_classic() +
-  guides(color=guide_legend(override.aes = list(size=5, alpha = 1)))
+names(clu) = rownames(meta.tmp)
+pd <- data.frame(x = phate.tmp[,1], y = phate.tmp[,2], clu = clu)
+mc <- exprmclust(t(phate.tmp),cluster=clu,reduce=F)
 plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
-ord <- TSCANorder(mc,MSTorder=c(2,1,3),orderonly=T)
-ggplot(data.frame(ct=active.ident[ord],pt=1:length(ord)),aes(x=pt,y=ct)) + geom_point(size = 0.1)
-ggplot(data.frame(x = dm[ord,1], y = dm[ord,2], t = seq(1, length(ord)))) + 
+ord <- TSCANorder(mc, MSTorder=c(1,2), orderonly=T)
+ggplot(data.frame(ct=meta[ord, ]$active.ident,
+                  pt=1:length(ord)),
+       aes(x=pt,y=ct)) + 
+  geom_point(size = 0.1)
+ggplot(data.frame(x = phate[ord,1], y = phate[ord,2], t = seq(1, length(ord)))) + 
   geom_point(aes(x = x, y = y, col = t), size = 0.1) + 
   scale_color_gradientn(colors = colorRampPalette(brewer.pal(11, 'RdYlBu'))(length(ord))) + 
-  theme_classic() + xlab('DM1') + ylab('DM2')   ## useful
-psn = data.frame(Cell = ord, Pseudotime = 1:length(ord), Celltype = as.character(active.ident)[match(ord, names(active.ident))], stringsAsFactors = FALSE)
-saveRDS(psn, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/EMDSC_MMDSC_PMNMDSC_pseudotime.rds')
+  theme_classic() + xlab('PHATE1') + ylab('PHATE2')   ## useful
+pseudotime <- 1:length(ord)
+names(pseudotime) <- ord
+saveRDS(pseudotime, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/pseudotime.rds')
 
-###
-id = which(clu %in% c(5,3))
-newclu <- clu[id]
-n <- names(newclu)
-newclu <- as.numeric(as.factor(newclu))
-names(newclu) <- n
-mc <- exprmclust(t(dm[id, ]),cluster=newclu,reduce=F)
+expr.tmp <- as.matrix(expr[, selectcell1])
+saveRDS(expr.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/data/log2cpm.rds')
+
+cellanno.tmp <- data.frame(cell = selectcell1, 
+                           sample = meta[selectcell1, 'Patient'],
+                           stringsAsFactors = FALSE)
+saveRDS(cellanno.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/cellanno.rds')
+
+
+
+###########
+phate.tmp = phate[selectcell2,]
+meta.tmp = meta[selectcell2,]
+expr.tmp <- as.matrix(expr[, selectcell2])
+library(TSCAN)
+library(RColorBrewer)
+clu = as.character(meta.tmp$active.ident)
+clu = as.numeric(as.factor(clu))
+names(clu) = rownames(meta.tmp)
+pd <- data.frame(x = phate.tmp[,1], y = phate.tmp[,2], clu = clu)
+mc <- exprmclust(t(phate.tmp),cluster=clu,reduce=F)
 plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
-ord <- TSCANorder(mc,MSTorder=c(2,1),orderonly=T)
-ggplot(data.frame(ct=active.ident[ord],pt=1:length(ord)),aes(x=pt,y=ct)) + geom_point(size = 0.1)
-ggplot(data.frame(x = dm[ord,1], y = dm[ord,2], t = seq(1, length(ord)))) + 
+ord <- TSCANorder(mc, MSTorder=c(1,2), orderonly=T)
+ggplot(data.frame(x = phate[ord,1], y = phate[ord,2], t = seq(1, length(ord)))) + 
   geom_point(aes(x = x, y = y, col = t), size = 0.1) + 
   scale_color_gradientn(colors = colorRampPalette(brewer.pal(11, 'RdYlBu'))(length(ord))) + 
-  theme_classic() + xlab('DM1') + ylab('DM2')   ## useful
-psn = data.frame(Cell = ord, Pseudotime = 1:length(ord), Celltype = as.character(active.ident)[match(ord, names(active.ident))], stringsAsFactors = FALSE)
-saveRDS(psn, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/EMDSC_MMDSC_pseudotime.rds')
+  theme_classic() + xlab('PHATE1') + ylab('PHATE2')   ## useful
+pseudotime <- 1:length(ord)
+names(pseudotime) <- ord
+saveRDS(pseudotime, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MAC1/data/pseudotime.rds')
+saveRDS(expr.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MAC1/data/log2cpm.rds')
 
-###
-id = which(clu %in% c(5,1))
-newclu <- clu[id]
-n <- names(newclu)
-newclu <- as.numeric(as.factor(newclu))
-names(newclu) <- n
-mc <- exprmclust(t(dm[id, ]),cluster=newclu,reduce=F)
-plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
-ord <- TSCANorder(mc,MSTorder=c(2,1),orderonly=T)
-ggplot(data.frame(ct=active.ident[ord],pt=1:length(ord)),aes(x=pt,y=ct)) + geom_point(size = 0.1)
-ggplot(data.frame(x = dm[ord,1], y = dm[ord,2], t = seq(1, length(ord)))) + 
-  geom_point(aes(x = x, y = y, col = t), size = 0.1) + 
-  scale_color_gradientn(colors = colorRampPalette(brewer.pal(11, 'RdYlBu'))(length(ord))) + 
-  theme_classic() + xlab('DM1') + ylab('DM2')   ## useful
-psn = data.frame(Cell = ord, Pseudotime = 1:length(ord), Celltype = as.character(active.ident)[match(ord, names(active.ident))], stringsAsFactors = FALSE)
-saveRDS(psn, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/EMDSC_MAC1_pseudotime.rds')
+cellanno.tmp <- data.frame(cell = selectcell2, 
+                           sample = meta[selectcell2, 'Patient'],
+                           stringsAsFactors = FALSE)
+saveRDS(cellanno.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MAC1/cellanno.rds')
 
-###
-id = which(clu %in% c(5,3,1))
-newclu <- clu[id]
-n <- names(newclu)
-newclu <- as.numeric(as.factor(newclu))
-names(newclu) <- n
-mc <- exprmclust(t(dm[id, ]),cluster=newclu,reduce=F)
-plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
-ord <- TSCANorder(mc,MSTorder=c(3,2,1),orderonly=T)
-ggplot(data.frame(ct=active.ident[ord],pt=1:length(ord)),aes(x=pt,y=ct)) + geom_point(size = 0.1)
-ggplot(data.frame(x = dm[ord,1], y = dm[ord,2], t = seq(1, length(ord)))) + 
-  geom_point(aes(x = x, y = y, col = t), size = 0.1) + 
-  scale_color_gradientn(colors = colorRampPalette(brewer.pal(11, 'RdYlBu'))(length(ord))) + 
-  theme_classic() + xlab('DM1') + ylab('DM2')   ## useful
-psn = data.frame(Cell = ord, Pseudotime = 1:length(ord), Celltype = as.character(active.ident)[match(ord, names(active.ident))], stringsAsFactors = FALSE)
-saveRDS(psn, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/data/order/EMDSC_MMDSC_MAC1_pseudotime.rds')
+
