@@ -6,7 +6,7 @@ library(TSCAN)
 library(scattermore)
 library(RColorBrewer)
 suppressMessages(library(igraph))
-setwd("/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/demean/allphate/")
+setwd("/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/demean/treevar/allphate/")
 plotdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/demean/treevar/allphate/plot/'
 rdir <- '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/demean/treevar/allphate/result/'
 source('/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01_function.R')
@@ -34,7 +34,7 @@ active.ident = active.ident[id]
 phate = phate[id,]
 ct = data.frame(cell = names(active.ident), celltype = active.ident, sample = meta[names(active.ident), 'Patient'], stringsAsFactors = FALSE)
 
-a = infer_tree_structure(pca = phate, ct = ct, origin.celltype = 'E-MDSC', plotdir = plotdir, number.cluster = length(unique(active.ident)))
+a = infer_tree_structure(pca = phate, ct = ct, origin.celltype = 'E-MDSC', plotdir = plotdir, number.cluster = length(unique(active.ident)), xlab = 'PHATE1', ylab = 'PHATE2')
 result <- evaluate_uncertainty(a, 100)
 saveRDS(result, paste0(rdir, 'result.rds'))
 for (i in 1:length(result)){
