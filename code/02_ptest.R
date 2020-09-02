@@ -5,6 +5,8 @@ trajectory <- as.character(commandArgs(trailingOnly = TRUE)[[1]][1])
 variable <- as.character(commandArgs(trailingOnly = TRUE)[[2]][1])
 # trajectory = 'EMDSC_MAC1'
 # variable = 'EMDSC'
+print(trajectory)
+print(variable)
 library(parallel)
 library(splines)
 source('/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01_function.R')
@@ -19,7 +21,7 @@ rmcell <- cellanno[cellanno[,2]=='GBM057',1]
 expr <- expr[, !colnames(expr)%in%rmcell]
 pseudotime <- pseudotime[!names(pseudotime) %in% rmcell]
 cellanno <- cellanno[!cellanno[,2]%in%'GBM057',]
-
+expr <- expr[rowMeans(expr > 0) > 0.01, ]
 
 if (variable == 'EMDSC'){
   design <- data.frame(intercept = 1, emdscProp = mdsc[,3])

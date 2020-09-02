@@ -34,7 +34,7 @@ clu = as.numeric(as.factor(clu))
 names(clu) = rownames(meta.tmp)
 pd <- data.frame(x = phate.tmp[,1], y = phate.tmp[,2], clu = clu)
 mc <- exprmclust(t(phate.tmp),cluster=clu,reduce=F)
-plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
+# plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
 ord <- TSCANorder(mc, MSTorder=c(1,2), orderonly=T)
 ggplot(data.frame(ct=meta[ord, ]$active.ident,
                   pt=1:length(ord)),
@@ -46,7 +46,7 @@ ggplot(data.frame(x = phate[ord,1], y = phate[ord,2], t = seq(1, length(ord)))) 
   theme_classic() + xlab('PHATE1') + ylab('PHATE2')   ## useful
 pseudotime <- 1:length(ord)
 names(pseudotime) <- ord
-saveRDS(pseudotime, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/pseudotime.rds')
+saveRDS(pseudotime, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/data/pseudotime.rds')
 
 expr.tmp <- as.matrix(expr[, selectcell1])
 saveRDS(expr.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/data/log2cpm.rds')
@@ -54,7 +54,7 @@ saveRDS(expr.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDS
 cellanno.tmp <- data.frame(cell = selectcell1, 
                            sample = meta[selectcell1, 'Patient'],
                            stringsAsFactors = FALSE)
-saveRDS(cellanno.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/cellanno.rds')
+saveRDS(cellanno.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MMDSC/data/cellanno.rds')
 
 
 
@@ -69,12 +69,12 @@ clu = as.numeric(as.factor(clu))
 names(clu) = rownames(meta.tmp)
 pd <- data.frame(x = phate.tmp[,1], y = phate.tmp[,2], clu = clu)
 mc <- exprmclust(t(phate.tmp),cluster=clu,reduce=F)
-plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
+# plotmclust(mc,show_full_tree=T, cell_point_size = 0.01)
 ord <- TSCANorder(mc, MSTorder=c(1,2), orderonly=T)
-ggplot(data.frame(x = phate[ord,1], y = phate[ord,2], t = seq(1, length(ord)))) + 
-  geom_point(aes(x = x, y = y, col = t), size = 0.1) + 
-  scale_color_gradientn(colors = colorRampPalette(brewer.pal(11, 'RdYlBu'))(length(ord))) + 
-  theme_classic() + xlab('PHATE1') + ylab('PHATE2')   ## useful
+# ggplot(data.frame(x = phate[ord,1], y = phate[ord,2], t = seq(1, length(ord)))) + 
+  # geom_point(aes(x = x, y = y, col = t), size = 0.1) + 
+  # scale_color_gradientn(colors = colorRampPalette(brewer.pal(11, 'RdYlBu'))(length(ord))) + 
+  # theme_classic() + xlab('PHATE1') + ylab('PHATE2')   ## useful
 pseudotime <- 1:length(ord)
 names(pseudotime) <- ord
 saveRDS(pseudotime, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MAC1/data/pseudotime.rds')
@@ -83,6 +83,6 @@ saveRDS(expr.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDS
 cellanno.tmp <- data.frame(cell = selectcell2, 
                            sample = meta[selectcell2, 'Patient'],
                            stringsAsFactors = FALSE)
-saveRDS(cellanno.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MAC1/cellanno.rds')
+saveRDS(cellanno.tmp, '/home-4/whou10@jhu.edu/scratch/Wenpin/GBM_myeloid/result/EMDSC_MAC1/data/cellanno.rds')
 
 
