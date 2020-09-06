@@ -15,9 +15,11 @@ expr <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M_log2cpm.
 
 ## select grade IV and untreated patients
 meta =  m_seu@meta.data
+saveRDS(meta, '/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M_meta.rds')
 selectcell = rownames(meta[meta$Tumor.Grade == 'IV' & meta$Treatment == 'Untreated', ])
 active.ident <- as.character(m_seu@active.ident)
 names(active.ident) = rownames(meta)
+saveRDS(active.ident, '/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M_active.ident.rds')
 active.ident = active.ident[selectcell]
 
 ## read in phate which is reproduced on subsetted cell types
