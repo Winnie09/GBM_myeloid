@@ -12,7 +12,7 @@ source('/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01
 # read in data
 m_seu = readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/seuratObject/M_subser.RDS')
 expr <- readRDS('/home-4/whou10@jhu.edu/data2/whou10/GBM/singleObject/M_log2cpm.rds')
-
+saver <- readRDS('/home-4/zji4@jhu.edu/scratch/GBM/data/combine/saver/M.rds')
 ## select grade IV and untreated patients
 meta =  m_seu@meta.data
 saveRDS(meta, '/home-4/whou10@jhu.edu/work-zfs/whou10/GBM/singleObject/M_meta.rds')
@@ -98,6 +98,9 @@ for (path in names(ordlist)){
                            sample = meta[ord, 'Patient'],
                            stringsAsFactors = FALSE)
   saveRDS(cellanno.tmp, paste0('./result/', path, '/data/cellanno.rds'))
+  
+  expr.saver <- saver[rownames(expr.tmp), colnames(expr.tmp)]
+  saveRDS(expr.saver, paste0('./result/', path, '/data/saver.rds'))
 }
 
 
