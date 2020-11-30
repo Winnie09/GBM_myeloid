@@ -202,7 +202,7 @@ gl <- c(
   'HK2',
   'MARCO'
 )
-fit = pred.scale[abs(res$cor)>0.3,]
+fit = pred.scale[rownames(res)[abs(res$cor)>0.3],]
 colnames(fit) <- pt[colnames(pred.scale)]
 png(paste0(plotdir, '/smooth_hm.png'),
     width = 800,
