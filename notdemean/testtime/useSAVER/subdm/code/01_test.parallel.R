@@ -24,7 +24,7 @@ colnames(design) <- 'intercept'
 # test
 # -----
 system.time({
-  Res <- testpt(expr = expr, cellanno = cellanno, pseudotime = pseudotime, design=design, permuiter=100, EMmaxiter=100, EMitercutoff=1, verbose=F, ncores=4, type='Time', fit.resolution = 1000, test.pattern = 'overall', demean=FALSE)
+  Res <- testpt(expr = expr, cellanno = cellanno, pseudotime = pseudotime, design=design, permuiter=100, EMmaxiter=100, EMitercutoff=1.5, verbose=F, ncores=4, type='Time', fit.resolution = 1000, test.pattern = 'overall', demean=FALSE)
   saveRDS(Res, paste0(rdir, '/ptest_res.rds'))
 })
 

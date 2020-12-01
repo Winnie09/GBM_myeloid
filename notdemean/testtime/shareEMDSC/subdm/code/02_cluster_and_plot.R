@@ -11,7 +11,7 @@ library(here)
 source(
   '/home-4/whou10@jhu.edu/scratch/Wenpin/trajectory_variability/function/01_function.R'
 )
-trajectory = 'EMDSC_MMDSC'
+
 trajectory = as.character(commandArgs(trailingOnly = TRUE)[[1]][1])
 # for (trajectory in c('EMDSC_MAC1','EMDSC_MAC1_MAC2','EMDSC_MMDSC','EMDSC_MMDSC_PMNMDSC','EMDSC_MMDSC_MAC1')) {
 print(trajectory)
@@ -80,6 +80,7 @@ if (trajectory == 'EMDSC_MMDSC_PMNMDSC') {
   clu <- kmeans(pred.scale, 5)$cluster
 }
 clu <- sort(clu)
+table(clu)
 res$clu = clu[rownames(res)]
 res$cor <- sapply(rownames(res), function(i) cor(pred.scale[i,], seq(1,ncol(pred.scale))))
 pred.scale <- pred.scale[rownames(res)[order(res$clu, res$cor)], ]
@@ -118,9 +119,9 @@ if (trajectory == 'EMDSC_MMDSC_PMNMDSC') {
 } else {
   png(
     paste0(plotdir, '/hm_kmeans_scale.png'),
-    width = 1050,
-    height = 1600,
-    res = 200
+    width = 2100,
+    height = 3200,
+    res = 300
   )
 }
 cpl = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100)
@@ -144,7 +145,8 @@ pheatmap(
     sample = col.sample
   ),
   cellwidth = 241.24 / ncol(pred.scale),
-  cellheight = 467.35 / nrow(pred.scale)
+  cellheight = 467.35 / nrow(pred.scale),
+  border_color = NA
 )
 dev.off()
 
@@ -161,8 +163,6 @@ pd$cluster = paste0(as.character(pd$cluster), '(', table(clu)[gsub('cluster','',
 cluord <- order(as.numeric(sapply(unique(pd$cluster), function(i) sub('\\(.*', '',sub('cluster', '', i)))))
 pd$cluster <-
   factor(as.character(pd$cluster), levels =  unique(pd$cluster)[cluord])
-
-
 pdf(paste0(plotdir, '/gene_cluster_pattern.pdf'),
     width = 4.2,
     height = 3)
@@ -184,6 +184,36 @@ print(
 )
 dev.off()
 
+# ## add CI
+# pd <- reshape2::melt(pred.scale)
+# pd$cluster = paste0('cluster',clu[pd[,1]])
+# pd$pseudotime = pt[pd[, 2]]
+# colnames(pd) <- c('gene', 'cell', 'expression','cluster', 'pseudotime')
+# pd$cluster = paste0(as.character(pd$cluster), '(', table(clu)[gsub('cluster','',as.character(pd$cluster))],')')
+# cluord <- order(as.numeric(sapply(unique(pd$cluster), function(i) sub('\\(.*', '',sub('cluster', '', i)))))
+# pd$cluster <-
+#   factor(as.character(pd$cluster), levels =  unique(pd$cluster)[cluord])
+# pdf(paste0(plotdir, '/gene_cluster_pattern_with_CI.pdf'),
+#     width = 4.2,
+#     height = 3)
+# print(
+#   ggplot(
+#     data = pd,
+#     aes(
+#       x = pseudotime,
+#       y = expression,
+#       group = cluster,
+#       color = cluster
+#     )
+#   ) +
+#     geom_smooth() +
+#     theme_classic() +
+#     scale_color_brewer(palette = 'Set1') +
+#     xlab('Pseudotime') +
+#     ylab('Averaged Fitted Expression')
+# )
+# dev.off()
+# ------------
 
 gl <- c(
   'CD14',
@@ -226,7 +256,7 @@ dm = dm[,-1]
 
 int = intersect(colnames(pred), rownames(dm))
 dm = dm[int,]
-
+gl = gl[gl %in% rownames(pred)]
 for (g in gl){
   pd = data.frame(DM1 = dm[,1], DM2 = dm[,2], Expression = pred[g,], stringsAsFactors = F)
   pdf(paste0(plotdir, '/dm_', g, '.pdf'), width = 3.5, height = 2.6)
@@ -238,4 +268,4 @@ for (g in gl){
   dev.off()  
 }
 
-  
+
